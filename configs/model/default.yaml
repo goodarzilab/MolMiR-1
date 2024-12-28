@@ -1,0 +1,68 @@
+# Model configuration
+architecture:
+  # Model type: 'transformer', 'gcn', or 'mpnn'
+  type: transformer
+  
+  # Transformer settings (used if type == 'transformer')
+  foundation_model: seyonec/ChemBERTa-zinc-base-v1
+  hidden_size: null  # Will be set based on model
+  hidden_dropout_prob: 0.1
+  max_length: 512
+
+  # New parameters for backbone freezing
+  freeze_backbone: true
+  unfreeze_layers: 2
+
+  # Graph model settings (used if type in ['gcn', 'mpnn', 'gin', 'attentivefp'])
+  graph:
+    hidden_channels: 128
+    num_layers: 3
+    dropout: 0.1
+    num_node_features: 10
+    num_edge_features: 4
+
+# Training parameters
+training:
+  learning_rate: 1e-4
+  reg_weight: 1.0
+  cls_weight: 1.0
+
+# Model-specific parameters
+z_score_threshold: 2.0
+auto_weight: true
+
+# Available model configurations
+configs:
+  transformer:
+    chemberta:
+      hidden_size: 768
+      max_length: 512
+      trust_remote_code: false
+    
+    chemberta_mlm:
+      hidden_size: 384
+      max_length: 512
+      trust_remote_code: false
+  
+  graph:
+    gcn:
+      hidden_channels: 128
+      num_layers: 3
+      dropout: 0.1
+      
+    mpnn:
+      hidden_channels: 128
+      num_layers: 3
+      dropout: 0.1
+
+    gin:
+      hidden_channels: 128
+      num_layers: 3
+      dropout: 0.1
+      
+    attentivefp:
+      hidden_channels: 128
+      num_layers: 3
+      dropout: 0.1
+      num_edge_features: 4
+     

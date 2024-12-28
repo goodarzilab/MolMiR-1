@@ -1,0 +1,4 @@
+# Test configuration
+test:
+  checkpoint_path: ???  # Path to the model checkpoint
+  output_dir: test_results
