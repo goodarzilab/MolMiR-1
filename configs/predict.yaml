@@ -1,6 +1,0 @@
-# Prediction configuration
-predict:
-  checkpoint_path: ???  # Path to the model checkpoint
-  smiles_file: ???     # Path to file containing SMILES (one per line)
-  output_dir: predictions
- 

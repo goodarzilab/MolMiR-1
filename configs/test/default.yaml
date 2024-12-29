@@ -2,3 +2,12 @@
 test:
   checkpoint_path: ???  # Path to the model checkpoint
   output_dir: test_results
+
+# Ensemble settings
+ensemble:
+  enabled: false
+  model_dir: null  # Directory containing ensemble model folds
+  aggregation:
+    regression: "mean"  # mean or median
+    classification: "vote"  # mean or vote
+  output_uncertainty: true

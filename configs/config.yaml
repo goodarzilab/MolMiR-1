@@ -4,6 +4,7 @@ defaults:
   - training: default
   - wandb: default
   - test: default
+  - predict: default
  
 wandb:
   project: "molecular-multitask"  # Your wandb project name
@@ -24,4 +25,25 @@ training:
   checkpoint_dir: "checkpoints"
   log_dir: "logs"
   val_check_interval: 0.25 # Validate every 25% of training epoch
- 
+
+ensemble:
+  enabled: false
+  num_folds: 5
+  base_dir: "${training.checkpoint_dir}/ensemble"
+  settings:
+    train:
+      combine_train_val: true
+    predict:
+      regression:
+        aggregation: "mean"  # "mean" or "median"
+        output_uncertainty: true
+      classification:
+        aggregation: "vote"  # "mean" or "vote"
+        output_uncertainty: true
+    test:
+      regression:
+        aggregation: "mean"
+        output_uncertainty: true
+      classification:
+        aggregation: "vote"
+        output_uncertainty: true

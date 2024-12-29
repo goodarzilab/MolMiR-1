@@ -5,3 +5,12 @@ smiles_file: null     # Will be overridden at runtime
 output_dir: "predictions"
 batch_size: 32       # Batch size for predictions
 num_workers: 4       # Number of workers for data loading
+
+# Ensemble prediction settings
+ensemble:
+  enabled: false
+  model_dir: null  # Directory containing ensemble model folds
+  aggregation:
+    regression: "mean"  # mean or median
+    classification: "vote"  # mean or vote
+  output_uncertainty: true  # Whether to output prediction uncertainties

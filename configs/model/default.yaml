@@ -65,4 +65,3 @@ configs:
       num_layers: 3
       dropout: 0.1
       num_edge_features: 4
-     
