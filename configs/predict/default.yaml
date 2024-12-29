@@ -1,0 +1,7 @@
+# configs/predict/default.yaml
+
+checkpoint_path: null  # Will be overridden at runtime
+smiles_file: null     # Will be overridden at runtime
+output_dir: "predictions"
+batch_size: 32       # Batch size for predictions
+num_workers: 4       # Number of workers for data loading
