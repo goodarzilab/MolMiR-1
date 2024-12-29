@@ -1,5 +1,18 @@
 """
 Test script for evaluating MolMir model on held-out test set.
+
+Examples:
+    ChemBERTa model testing:
+        $ python test.py model.architecture.foundation_model=DeepChem/ChemBERTa-77M-MLM \
+            "+test.checkpoint_path='checkpoints/molmir_ChemBERTa-77M-MLM_epoch=01_lossval_loss=1.33_aucval_auc=0.556_praucval_pr_auc=0.041.ckpt'"
+
+    MPNN model testing:
+        $ python test.py model.architecture.type=mpnn \
+            "+test.checkpoint_path='checkpoints/molmir_mpnn_model_epoch=03_lossval_loss=1.32_aucval_auc=0.633_praucval_pr_auc=0.064.ckpt'"
+
+    GCN model testing:
+        $ python test.py model.architecture.type=gcn \
+            "+test.checkpoint_path='checkpoints/molmir_gcn_model_epoch=01_lossval_loss=1.99_aucval_auc=0.648_praucval_pr_auc=0.065.ckpt'"
 """
 
 import os

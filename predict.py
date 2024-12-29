@@ -1,6 +1,22 @@
 """
 Prediction script for MolMir model.
 Takes SMILES input and returns predictions using a trained model.
+
+Examples:
+    ChemBERTa model prediction:
+        $ python predict.py model.architecture.foundation_model=DeepChem/ChemBERTa-77M-MLM \
+            predict.smiles_file=test/test_SMILES.tsv \
+            "+predict.checkpoint_path='checkpoints/molmir_ChemBERTa-77M-MLM_epoch=01_lossval_loss=1.33_aucval_auc=0.556_praucval_pr_auc=0.041.ckpt'"
+
+    GCN model prediction:
+        $ python predict.py model.architecture.type=gcn \
+            predict.smiles_file=test/test_SMILES.tsv \
+            "+predict.checkpoint_path='checkpoints/molmir_gcn_model.ckpt'"
+
+    MPNN model prediction:
+        $ python predict.py model.architecture.type=mpnn \
+            predict.smiles_file=test/test_SMILES.tsv \
+            "+predict.checkpoint_path='checkpoints/molmir_mpnn_model_epoch=03_lossval_loss=1.32_aucval_auc=0.633_praucval_pr_auc=0.064.ckpt'"
 """
 
 import os

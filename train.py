@@ -1,6 +1,18 @@
 """
 Training script for molecular property prediction models.
 Supports both transformer and graph-based architectures.
+
+Examples:
+   ChemBERTa model training:
+       $ python train.py model.architecture.foundation_model=DeepChem/ChemBERTa-77M-MLM \
+           model.architecture.freeze_backbone=True \
+           model.architecture.unfreeze_layers=0
+
+   MPNN model training:
+       $ python train.py model.architecture.type=mpnn
+
+   GCN model training:
+       $ python train.py model.architecture.type=gcn
 """
 
 import os
