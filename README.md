@@ -8,6 +8,10 @@ MolMiR-1 is a machine learning framework for molecular miRNA target prediction. 
   - Transformer-based models (using ChemBERTa)
   - Graph Neural Networks (GCN, MPNN, GIN, AttentiveFP)
 - Multi-task learning for both regression and classification
+- Ensemble models with uncertainty estimation
+  - K-fold cross-validation ensemble training
+  - Model uncertainty quantification
+  - Ensemble prediction aggregation
 - Comprehensive evaluation metrics
 - Hydra configuration system
 - PyTorch Lightning training framework
@@ -32,6 +36,7 @@ MolMiR-1/
 │   ├── processed_dataset_*.pt  # Model-specific processed datasets
 │   └── split_info.json        # Train/val/test split information
 ├── checkpoints/               # Model checkpoints
+│   └── ensemble/             # Ensemble model checkpoints
 ├── configs/                   # Hydra configuration files
 │   ├── config.yaml           # Main configuration
 │   ├── model/                # Model-specific configs
@@ -41,17 +46,22 @@ MolMiR-1/
 ├── src/                      # Source code
 │   ├── data/                # Data loading and processing
 │   ├── models/              # Model architectures
+│   │   └── ensemble.py     # Ensemble model implementation
 │   └── utils/               # Utility functions
 ├── test_results/            # Test evaluation results
+├── predictions/             # Model predictions output
 ├── environment.yml          # Conda environment specification
-├── train.py                 # Training script
-├── test.py                  # Testing script
-└── predict.py               # Prediction script
+├── train.py                 # Single model training script
+├── test.py                  # Single model testing script
+├── predict.py               # Single model prediction script
+├── train_ensemble.py        # Ensemble training script
+├── test_ensemble.py         # Ensemble testing script
+└── predict_ensemble.py      # Ensemble prediction script
 ```
 
 ## Usage
 
-### Training
+### Single Model Training
 
 ```bash
 # Train transformer model
@@ -64,15 +74,49 @@ python train.py model.architecture.type=gcn
 python train.py model.architecture.type=mpnn
 ```
 
+### Ensemble Model Training
+
+```bash
+# Train transformer ensemble
+python train_ensemble.py model.architecture.type=transformer \
+    model.architecture.foundation_model=DeepChem/ChemBERTa-77M-MLM \
+    training.ensemble.enabled=true
+
+# Train GCN ensemble
+python train_ensemble.py model.architecture.type=gcn \
+    training.ensemble.enabled=true
+```
+
 ### Testing
 
 ```bash
-# Test transformer model
-python test.py model.architecture.foundation_model=DeepChem/ChemBERTa-77M-MLM "+test.checkpoint_path='checkpoints/your_checkpoint.ckpt'"
+# Test single transformer model
+python test.py model.architecture.foundation_model=DeepChem/ChemBERTa-77M-MLM \
+    "+test.checkpoint_path='checkpoints/your_checkpoint.ckpt'"
 
-# Test graph models
+# Test transformer ensemble
+python test_ensemble.py model.architecture.type=transformer \
+    test.ensemble.model_dir=checkpoints/ensemble/ChemBERTa-77M-MLM \
+    test.ensemble.enabled=true
+
+# Test graph models (single and ensemble)
 python test.py model.architecture.type=gcn "+test.checkpoint_path='checkpoints/your_checkpoint.ckpt'"
-python test.py model.architecture.type=mpnn "+test.checkpoint_path='checkpoints/your_checkpoint.ckpt'"
+python test_ensemble.py model.architecture.type=gcn test.ensemble.model_dir=checkpoints/ensemble/gcn_model test.ensemble.enabled=true
+```
+
+### Prediction
+
+```bash
+# Single model prediction
+python predict.py model.architecture.type=transformer \
+    predict.checkpoint_path=checkpoints/your_checkpoint.ckpt \
+    predict.smiles_file=test/test_SMILES.tsv
+
+# Ensemble prediction with uncertainty
+python predict_ensemble.py model.architecture.type=transformer \
+    predict.ensemble.model_dir=checkpoints/ensemble/ChemBERTa-77M-MLM \
+    predict.ensemble.enabled=true \
+    predict.smiles_file=test/test_SMILES.tsv
 ```
 
 ## License
