@@ -97,6 +97,9 @@ class MolecularDataModule(pl.LightningDataModule):
         model_name: Optional[str] = 'seyonec/ChemBERTa-zinc-base-v1',
         batch_size: int = 32,
         num_workers: int = 4,
+        prefetch_factor: int = 2,
+        persistent_workers: bool = True,
+        pin_memory: bool = True,
         max_length: int = 512,
         z_score_threshold: float = 2.0,
         train_size: float = 0.8,
@@ -317,7 +320,9 @@ class MolecularDataModule(pl.LightningDataModule):
             batch_size=self.hparams.batch_size,
             shuffle=True,
             num_workers=self.hparams.num_workers,
-            pin_memory=True,
+            prefetch_factor=self.hparams.prefetch_factor,
+            persistent_workers=self.hparams.persistent_workers,
+            pin_memory=self.hparams.pin_memory,
             collate_fn=None if self.hparams.model_type == 'transformer' else collate_graphs
         )
 
@@ -327,7 +332,9 @@ class MolecularDataModule(pl.LightningDataModule):
             batch_size=self.hparams.batch_size,
             shuffle=False,
             num_workers=self.hparams.num_workers,
-            pin_memory=True,
+            prefetch_factor=self.hparams.prefetch_factor,
+            persistent_workers=self.hparams.persistent_workers,
+            pin_memory=self.hparams.pin_memory,
             collate_fn=None if self.hparams.model_type == 'transformer' else collate_graphs
         )
 
@@ -337,6 +344,8 @@ class MolecularDataModule(pl.LightningDataModule):
             batch_size=self.hparams.batch_size,
             shuffle=False,
             num_workers=self.hparams.num_workers,
-            pin_memory=True,
+            prefetch_factor=self.hparams.prefetch_factor,
+            persistent_workers=self.hparams.persistent_workers,
+            pin_memory=self.hparams.pin_memory,
             collate_fn=None if self.hparams.model_type == 'transformer' else collate_graphs
         )

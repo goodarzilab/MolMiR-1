@@ -286,6 +286,9 @@ def main(cfg: DictConfig) -> None:
             model_name=cfg.model.architecture.get('foundation_model', None),
             batch_size=cfg.training.batch_size,
             num_workers=4,
+            prefetch_factor=cfg.data.dataloader.prefetch_factor,
+            persistent_workers=cfg.data.dataloader.persistent_workers,
+            pin_memory=cfg.data.dataloader.pin_memory,
             max_length=cfg.model.architecture.get('max_length', 512),
             z_score_threshold=cfg.model.z_score_threshold,
             cache_only=False

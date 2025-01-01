@@ -8,31 +8,28 @@ defaults:
  
 wandb:
   project: "molecular-multitask"  # Your wandb project name
+  entity: "hani-goodarzi"
   run_name: null  # Optional, will be auto-generated if not specified
   tags: ["multitask", "molecular"]  # Optional tags for the run
 
 data:
   smiles_path: "../drug_manifest/Plates384well-3300cmpds-col1,2,23,24empty_withSMILES.tsv"
   activity_path: "../processed_data/all_results_DEnorm_nt-6.csv"
-
-training:
-  batch_size: 32
-  num_workers: 4
-  learning_rate: 1e-4
-  max_epochs: 100
-  patience: 10
-  gradient_clip_val: 1.0
-  checkpoint_dir: "checkpoints"
-  log_dir: "logs"
-  val_check_interval: 0.25 # Validate every 25% of training epoch
+  dataloader:    # Add this section under data
+    prefetch_factor: 2
+    persistent_workers: true
+    pin_memory: true
 
 ensemble:
   enabled: false
   num_folds: 5
-  base_dir: "${training.checkpoint_dir}/ensemble"
   settings:
     train:
       combine_train_val: true
+      dataloader:
+        prefetch_factor: 2
+        persistent_workers: true
+        pin_memory: true
     predict:
       regression:
         aggregation: "mean"  # "mean" or "median"

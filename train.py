@@ -14,8 +14,12 @@ Examples:
    GCN model training:
        $ python train.py model.architecture.type=gcn
 """
+import torch.multiprocessing
+torch.multiprocessing.set_sharing_strategy('file_system')
 
 import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 import logging
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Tuple
@@ -24,7 +28,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger
 import hydra
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 import torch
 import wandb
 
@@ -142,6 +146,7 @@ def create_model(cfg: DictConfig, num_features: int, class_weights: Optional[tor
 
 def create_callbacks(cfg: DictConfig, model_identifier: str) -> list:
     """Create training callbacks."""
+    print(f"Checkpoint directory: {cfg.training.checkpoint_dir}")
     callbacks = [
         ModelCheckpoint(
             monitor='val_loss',
@@ -164,6 +169,22 @@ def create_callbacks(cfg: DictConfig, model_identifier: str) -> list:
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def main(cfg: DictConfig) -> None:
+    if wandb.run is not None and wandb.config:
+        # Update cfg with wandb sweep parameters
+        for key, value in wandb.config.items():
+            OmegaConf.update(cfg, key, value, merge=True)
+
+    if wandb.run is not None:
+        print(wandb.config)
+    else:
+        print("No wandb run found")
+    
+    # Debug configuration merge
+    print("Configuration Merge Debug:")
+    print("Sweep Configuration:")
+    print(f"Model Type: {cfg.model.architecture.type}")
+    print(f"Foundation Model: {cfg.model.architecture.foundation_model}")
+    
     """Main training function."""
     # Basic setup
     setup_logging(cfg)
@@ -187,6 +208,9 @@ def main(cfg: DictConfig) -> None:
         model_name=cfg.model.architecture.foundation_model if model_type == 'transformer' else None,
         batch_size=cfg.training.batch_size,
         num_workers=cfg.training.num_workers,
+        prefetch_factor=cfg.training.dataloader.prefetch_factor,
+        persistent_workers=cfg.training.dataloader.persistent_workers,
+        pin_memory=cfg.training.dataloader.pin_memory,
         max_length=cfg.model.architecture.max_length,
         z_score_threshold=cfg.model.z_score_threshold,
         train_size=cfg.training.get('train_size', 0.8),
@@ -198,6 +222,9 @@ def main(cfg: DictConfig) -> None:
     data_module.setup()
     
     # Create model
+    print("Model Configuration:")
+    print(f"Model Type: {cfg.model.architecture.type}")
+    print(f"Foundation Model: {cfg.model.architecture.foundation_model}")
     model = create_model(
         cfg,
         num_features=data_module.num_features,

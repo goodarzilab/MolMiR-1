@@ -276,7 +276,7 @@ def save_results(
 ) -> None:
     """Save test results to files."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    results_base = Path(output_dir) / f"ensemble_test_results_{model_identifier}_{timestamp}"
+    results_base = Path(output_dir) / f"ensemble_test_results_{timestamp}"
     
     # Convert numpy types to Python native types
     metrics = convert_numpy_types(metrics)
@@ -335,6 +335,9 @@ def main(cfg: DictConfig) -> None:
             model_name=metadata['config']['model']['architecture'].get('foundation_model', None),
             batch_size=cfg.training.batch_size,
             num_workers=4,
+            prefetch_factor=cfg.data.dataloader.prefetch_factor,
+            persistent_workers=cfg.data.dataloader.persistent_workers,
+            pin_memory=cfg.data.dataloader.pin_memory,
             max_length=metadata['config']['model']['architecture'].get('max_length', 512),
             z_score_threshold=cfg.model.z_score_threshold
         )
@@ -381,7 +384,7 @@ def main(cfg: DictConfig) -> None:
         test_metrics = trainer.test(test_module, datamodule=data_module)[0]
         
         # Save results
-        save_results(test_metrics, ensemble_dir, model_identifier)
+        save_results(test_metrics, ensemble_dir, model_identifier, output_dir=ensemble_dir)
         
         # Print summary
         logging.info("\nTest Results Summary:")

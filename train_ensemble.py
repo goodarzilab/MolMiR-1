@@ -18,8 +18,12 @@ Examples:
             training.ensemble.enabled=true \
             training.ensemble.num_folds=5
 """
+import torch.multiprocessing
+torch.multiprocessing.set_sharing_strategy('file_system')
 
 import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 import logging
 from pathlib import Path
 import hydra
@@ -33,6 +37,7 @@ import json
 
 from src.data import MolecularDataModule
 from src.models.ensemble import MolMirEnsemble
+from src.utils.name_generator import generate_name
 
 def setup_logging(cfg: DictConfig) -> None:
     """Set up basic logging configuration."""
@@ -41,8 +46,6 @@ def setup_logging(cfg: DictConfig) -> None:
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
     
-    ensemble_dir = Path(cfg.training.checkpoint_dir) / "ensemble"
-    ensemble_dir.mkdir(parents=True, exist_ok=True)
     Path(cfg.training.log_dir).mkdir(parents=True, exist_ok=True)
 
 def save_ensemble_metadata(ensemble_dir: Path, cfg: DictConfig, model_identifier: str) -> None:
@@ -79,6 +82,9 @@ def setup_fold_data_module(
         model_name=cfg.model.architecture.foundation_model if model_type == 'transformer' else None,
         batch_size=cfg.training.batch_size,
         num_workers=cfg.training.num_workers,
+        prefetch_factor=cfg.training.dataloader.prefetch_factor,
+        persistent_workers=cfg.training.dataloader.persistent_workers,
+        pin_memory=cfg.training.dataloader.pin_memory, 
         max_length=cfg.model.architecture.max_length,
         z_score_threshold=cfg.model.z_score_threshold
     )
@@ -123,6 +129,7 @@ def create_fold_trainer(
         callbacks=callbacks,
         gradient_clip_val=cfg.training.gradient_clip_val,
         val_check_interval=cfg.training.val_check_interval,
+        check_val_every_n_epoch=1,
         deterministic=True,
         precision=16
     )
@@ -166,18 +173,24 @@ def main(cfg: DictConfig) -> None:
         # Basic setup
         setup_logging(cfg)
         torch.set_float32_matmul_precision('high')
-        
+
         # Get model type and identifier
         model_type = cfg.model.architecture.type
         model_identifier = get_model_identifier(cfg)
         logging.info(f"\nInitializing ensemble training for {model_identifier}")
-        
-        # Set up ensemble directory
-        ensemble_dir = Path(cfg.training.checkpoint_dir) / "ensemble" / model_identifier
+                # Generate or use run name before fold loop
+        if not cfg.wandb.run_name:
+            base_name = generate_name()
+        else:
+            base_name = cfg.wandb.run_name
+
+        # Set up ensemble directory with base_name
+        ensemble_dir = Path(cfg.training.checkpoint_dir) / "ensemble" / base_name / model_identifier
         ensemble_dir.mkdir(parents=True, exist_ok=True)
         
         # Save ensemble metadata
         save_ensemble_metadata(ensemble_dir, cfg, model_identifier)
+        logging.info(f"Ensemble metadata saved to {ensemble_dir}/ensemble_metadata.json")
         
         # Initialize base data module to get num_features
         base_data_module = MolecularDataModule(
@@ -187,6 +200,9 @@ def main(cfg: DictConfig) -> None:
             model_name=cfg.model.architecture.foundation_model if model_type == 'transformer' else None,
             batch_size=cfg.training.batch_size,
             num_workers=cfg.training.num_workers,
+            prefetch_factor=cfg.training.dataloader.prefetch_factor,
+            persistent_workers=cfg.training.dataloader.persistent_workers,
+            pin_memory=cfg.training.dataloader.pin_memory, 
             max_length=cfg.model.architecture.max_length,
             z_score_threshold=cfg.model.z_score_threshold
         )
@@ -205,7 +221,7 @@ def main(cfg: DictConfig) -> None:
         
         # Get all training data indices
         all_train_indices = list(range(len(base_data_module.train_dataset)))
-        
+
         # Get k-fold splits
         splits = ensemble.get_fold_splits(all_train_indices, cfg.training.ensemble.num_folds)
         logging.info(f"\nCreated {len(splits)} fold splits")
@@ -224,14 +240,24 @@ def main(cfg: DictConfig) -> None:
                 fold_data_module = setup_fold_data_module(
                     cfg, model_type, fold_train_indices, fold_val_indices
                 )
-                
-                # Initialize wandb logger for this fold
-                wandb_logger = WandbLogger(
+
+                # Initialize wandb with the name and group
+                run = wandb.init(
                     project=cfg.wandb.project,
-                    name=f"{cfg.wandb.run_name}_fold_{fold_idx}" if cfg.wandb.run_name else f"fold_{fold_idx}",
-                    config=OmegaConf.to_container(cfg, resolve=True),
+                    entity=cfg.wandb.entity if cfg.wandb.entity else "hani-goodarzi",
+                    name=f"{base_name}_fold_{fold_idx}",
+                    group=f"ensemble_{base_name}",
+                    config=OmegaConf.to_container(cfg, resolve=True)
+                )
+                # Create the wandb logger with group
+                wandb_logger = WandbLogger(
+                    experiment=run,
                     save_dir=fold_dir
                 )
+                
+                # Verify the run name was set correctly
+                if wandb.run is not None:
+                    logging.info(f"Actual wandb run name: {wandb.run.name}")
                 
                 # Create model for this fold with correct parameters
                 model = ensemble.model_class(**model_params)

@@ -1,0 +1,30 @@
+# configs/sweep.yaml
+sweep:
+  name: "test_sweep"
+  method: "bayes"
+  metric:
+    name: "val_auc"
+    goal: "maximize"
+
+  parameters:
+    # Model architecture selection
+    model.architecture.type:
+      values: ["transformer"]
+    
+    # Transformer specific parameters
+    model.architecture.foundation_model:
+      values: ["DeepChem/ChemBERTa-77M-MLM"]
+    model.architecture.freeze_backbone:
+      values: [true]
+    model.architecture.unfreeze_layers:
+      values: [0, 1]
+    
+    # Basic hyperparameters
+    model.training.learning_rate:
+      values: [1e-4, 5e-4]
+    
+    training.batch_size:
+      values: [32, 64]
+    
+    training.max_epochs:
+      value: 1

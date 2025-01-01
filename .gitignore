@@ -1,3 +1,18 @@
+# SLURM scripts with sensitive data
+test_train.sh
+submit_sweep.sh
+*_sweep.sh
+*_train.sh
+
+# SLURM output and error files
+slurm-*.out
+*.out
+*.err
+test_train_*.out
+test_train_*.err
+sweep_*.out
+sweep_*.err
+
 # Python
 __pycache__/
 *.py[cod]
