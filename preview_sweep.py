@@ -59,13 +59,13 @@ def main():
     
     # Print summary
     print(f"\nFound {len(combinations)} possible combinations")
-    print(f"Each combination will run with {sweep_config['parameters'].get('training.ensemble.num_folds', {}).get('value', 'unknown')} folds")
+    print(f"Each combination will run with {sweep_config['parameters'].get('training.num_folds', {}).get('value', 'unknown')} folds")
     print()
     
     # Print each command
     for i, params in enumerate(combinations, 1):
         print(f"Command {i}/{len(combinations)}:")
-        cmd = format_command("python train_ensemble.py", params)
+        cmd = format_command("python train.py", params)
         print(cmd)
         print()
 

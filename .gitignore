@@ -3,6 +3,7 @@ test_train.sh
 submit_sweep.sh
 *_sweep.sh
 *_train.sh
+sweep_agents.sh
 
 # SLURM output and error files
 slurm-*.out

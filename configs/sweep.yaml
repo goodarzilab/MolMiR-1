@@ -1,6 +1,6 @@
 # configs/sweep.yaml
 sweep:
-  name: "test_sweep"
+  name: "molmir_sweep"
   method: "bayes"
   metric:
     name: "val_auc"
@@ -9,22 +9,76 @@ sweep:
   parameters:
     # Model architecture selection
     model.architecture.type:
-      values: ["transformer"]
+      values: ["transformer", "gcn", "mpnn"]  # Removed attentivefp to focus on core architectures
     
-    # Transformer specific parameters
+    # Transformer-specific parameters
     model.architecture.foundation_model:
-      values: ["DeepChem/ChemBERTa-77M-MLM"]
+      values: [
+        "DeepChem/ChemBERTa-77M-MLM",  # Focus on the best performing model
+        "DeepChem/ChemBERTa-10M-MLM"   # And its smaller variant
+      ]
+    
     model.architecture.freeze_backbone:
-      values: [true]
+      value: true
+    
     model.architecture.unfreeze_layers:
       values: [0, 1]
     
-    # Basic hyperparameters
+    model.architecture.hidden_dropout_prob:
+      value: 0.2
+    
+    # Graph model parameters
+    model.architecture.graph.hidden_channels:
+      values: [128, 256]
+    
+    model.architecture.graph.num_layers:
+      values: [2, 3]
+    
+    model.architecture.graph.dropout:
+      value: 0.1
+    
+    # Training hyperparameters
     model.training.learning_rate:
-      values: [1e-4, 5e-4]
+      distribution: "log_uniform_values"
+      min: 0.00005
+      max: 0.0005
+    
+    model.training.reg_weight:
+      value: 1.0
+    
+    model.training.cls_weight:
+      value: 1.0
     
     training.batch_size:
-      values: [32, 64]
+      values: [64, 128]
     
+    training.gradient_clip_val:
+      value: 1.0
+    
+    # Fixed parameters
     training.max_epochs:
-      value: 1
+      value: 50
+    
+    training.patience:
+      value: 10
+    
+    training.val_check_interval:
+      value: 0.25
+    
+    model.z_score_threshold:
+      value: 2.0
+    
+    model.auto_weight:
+      value: true
+    
+    training.train_size:
+      value: 0.8
+    
+    training.val_size:
+      value: 0.05
+
+  early_terminate:
+    type: hyperband
+    min_iter: 10
+    max_iter: 50
+    eta: 2

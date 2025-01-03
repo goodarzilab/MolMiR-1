@@ -1,0 +1,30 @@
+# configs/sweep.yaml
+sweep:
+  name: "graph_test_sweep"
+  method: "bayes"
+  metric:
+    name: "val_auc"
+    goal: "maximize"
+
+  parameters:
+    # Model architecture selection
+    model.architecture.type:
+      values: ["gcn", "mpnn"]
+  
+    # Graph specific parameters (only used when type=gcn or mpnn)
+    model.architecture.graph.hidden_channels:
+      values: [64, 128]
+    model.architecture.graph.num_layers:
+      value: 2
+    model.architecture.graph.dropout:
+      value: 0.2
+    
+    # Basic hyperparameters (shared across all models)
+    model.training.learning_rate:
+      values: [1e-4, 5e-4]
+    
+    training.batch_size:
+      value: 32
+    
+    training.max_epochs:
+      value: 1
